@@ -24,15 +24,18 @@ def compost_layers(layers):
 
 
 def generate_circles_image(image_size, background_color, extra_text):
+    background_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    # background_color = 'black'
     layers = [
         make_circles_layer(background_color, image_size, num_circles=50, blur_radius=30),
         make_circles_layer(TRANSPARENT, image_size, num_circles=10, blur_radius=10, circle_scale=0.5),
-        # make_x_layer(TRANSPARENT, image_size, line_width=10),
+        # make_text_layer(TRANSPARENT, image_size, extra_text, blur_radius=10),
         make_text_layer(TRANSPARENT, image_size, extra_text),
         make_circles_layer(TRANSPARENT, image_size, num_circles=10, blur_radius=1.5, circle_scale=0.5),
-        # make_layer(TRANSPARENT, image_size, num_circles=1, blur_radius=0.1, circle_scale=0.5),
+        make_circles_layer(TRANSPARENT, image_size, num_circles=3, blur_radius=0.3, circle_scale=0.2),
     ]
     combined_image = compost_layers(layers)
+
     return combined_image
 
 
@@ -40,7 +43,7 @@ def make_circles_layer(
         background_color, image_size, num_circles, blur_radius, circle_scale=1.0
     ):
     blur_radius = blur_radius * image_size[0] // 300   # Blur radius based on image width
-    blur_radius = max(blur_radius, 3)  # Limit blur radius to 30
+    # blur_radius = max(blur_radius, 3)  # Limit blur radius to 30
 
     # Create a new image with white background
     layer = Image.new('RGBA', image_size, background_color)
@@ -48,8 +51,21 @@ def make_circles_layer(
 
     # Generate and draw random circles for the first layer
     generate_circles(draw, image_size, num_circles, circle_scale=circle_scale)
+    # alpha = 245
+    # for _ in range(num_circles):
+    #     add_ellipse(draw, image_size, alpha, circle_scale=circle_scale)
+
     layer = layer.filter(ImageFilter.GaussianBlur(blur_radius))
+    # layer = layer.filter(ImageFilter.BoxBlur(blur_radius))
+
+    # layer = layer.rotate(angle=random.randint(0, 360), expand=True)
+    # layer.resize((image_size[0] * 2, image_size[1] * 2))
+    # layer = layer.crop((0, 0, image_size[0], image_size[1]))
     return layer
+
+
+# def add_ellipse(draw, image_size, alpha, circle_scale=1.0):
+#     ...
 
 
 def make_x_layer(background_color, image_size, line_width=2):
@@ -58,10 +74,11 @@ def make_x_layer(background_color, image_size, line_width=2):
     draw = ImageDraw.Draw(layer)
     draw.line((0, 0) + image_size, fill=line_color, width=line_width)
     draw.line((0, image_size[1], image_size[0], 0), fill=line_color, width=line_width)
+
     return layer
 
 
-def make_text_layer(background_color, size, extra_text):
+def make_text_layer(background_color, size, extra_text, blur_radius=0):
     layer = Image.new('RGBA', size, background_color)
     draw = ImageDraw.Draw(layer)
 
@@ -76,16 +93,33 @@ def make_text_layer(background_color, size, extra_text):
     text_x = (size[0] - text_width) // 2
     text_y = (size[1] - text_height) // 2
 
-    draw.text((text_x, text_y), text, fill='white', font=font)
+    if blur_radius:
+        offset = 10
+        fill = 'black'
+        positions = (
+            (text_x - offset, text_y),
+            (text_x + offset, text_y),
+            (text_x, text_y - offset),
+            (text_x, text_y + offset),
+            (text_x + offset, text_y + offset),
+            (text_x + offset, text_y - offset),
+            (text_x - offset, text_y + offset),
+            (text_x - offset, text_y - offset),
+        )
+        for pos in positions:
+            draw.text(pos, text, fill=fill, font=font)
+        layer = layer.filter(ImageFilter.GaussianBlur(blur_radius))
+    else:
+        draw.text((text_x, text_y), text, fill='white', font=font)
 
     return layer
 
 
 def generate_circles(draw, image_size, num_circles, circle_scale=1.0):
-    alpha = 220
+    alpha = 245 #220
     for _ in range(num_circles):
         circle_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), alpha)
-        radius = random.randint(10, 100)
+        radius = random.randint(10, 200)
         # Scale radius based on image width
         radius = radius * image_size[0] // 600 * circle_scale
         radius = int(radius)
@@ -95,17 +129,33 @@ def generate_circles(draw, image_size, num_circles, circle_scale=1.0):
             #             random.randint(0, image_size[1] - radius * 2))
             position = (random.randint(0, image_size[0]),
                         random.randint(0, image_size[1]))
+            # position = (image_size[0], 0)
+            # pp(position)
         except ValueError:
             continue
+
+        # size = (radius // 1.5, radius * 1.5)
+        size = (radius, radius)
+
+        box = [
+            position[0] - size[0] //2,
+            position[1] - size[1] //2,
+            position[0] + size[1] //2,
+            position[1] + size[1] //2,
+        ]
+        # pp(box)
+
         border_color = (
             random.randint(0, 255), random.randint(0, 255),
             random.randint(0, 255), alpha
         )
         border_width = random.randint(0, 30)
-        draw.ellipse(
-            [position, (position[0] + radius * 2, position[1] + radius * 2)],
-            fill=circle_color, outline=border_color, width=border_width
-        )
+        draw.ellipse(box, fill=circle_color, outline=border_color, width=border_width)
+
+        # draw.ellipse(
+        #     [position, (position[0] + radius * 2, position[1] + radius * 2)],
+        #     fill=circle_color, outline=border_color, width=border_width
+        # )
 
 
 def generate_descriptive_image(size, background_color, extra_text):
