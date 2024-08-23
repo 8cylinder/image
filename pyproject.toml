@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "generate_images"
+version = "0.1.0"
+description = "Generate random images"
+authors = ["Sheldon McGrandle <developer@8cylinder.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+click = "^8.1.7"
+pillow = "^10.4.0"
+
+[tool.poetry.scripts]
+gi = "generate_images.generate_images:generate_images"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
