@@ -1,0 +1,197 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="1000px" height="700px" version="1.1"
+     xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="blur-a">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="75" />
+    </filter>
+    <filter id="blur-b">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10" />
+    </filter>
+  </defs>
+
+  <style><![CDATA[
+    .boxa{
+      fill: red;
+    }
+    Xellipse{
+      fill: lightblue;
+      stroke: darkblue;
+      stroke-width: 50;
+    }
+    .rotate{
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    #layer1{
+      border: 1px solid red;
+    }
+    text{
+      font-family: monospace;
+      font-size: 70px;
+      fill: white;
+      text-anchor: middle;
+    }
+    ]]></style>
+  <desc>Four separate rectangles</desc>
+  <rect id="background" x="0" y="0" width="100%" height="100%" fill="white" stroke="blue"
+        stroke-width="10" />
+
+  <g id="layer-a" filter="url(#blur-a)"></g>
+  <g id="layer-b" filter="url(#blur-b)"></g>
+
+  <g class="text">
+    <text fill="black" x="50%" y="50%">1000 x 1000</text>
+  </g>
+  <script><![CDATA[
+    function random(min, max, unit){
+      if(unit === undefined){
+        unit = 0;
+      }
+      return Math.floor(Math.random() * (max - min) + min) + unit;
+    }
+
+    function get_random_color(){
+      let color = ''
+      for(let i = 0; i < 3; i++){
+        color += Math.floor(Math.random() * 255)
+            .toString(16)
+            .padStart(2, "0")
+      }
+      return `#${color}`;
+    }
+
+    function get_random_hsl(){
+      let h = random(0, 360)
+      let s = random(0, 100)
+      let l = random(0, 100)
+      // return `hsl(${h}, ${s}%, ${l}%)`
+      return [h, s, l]
+    }
+
+    // function format_hsl(hsl){
+    //   return `hsl(${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%)`
+    // }
+    //
+    // class hsl{
+    //   constructor(h, s, l){
+    //     this.h = h;
+    //     this.s = s;
+    //     this.l = l;
+    //   }
+    //
+    //   toString(){
+    //     return `hsl(${this.h}, ${this.s}%, ${this.l}%)`
+    //   }
+    // }
+
+    class Color
+    {
+      constructor(){
+        this.h = random(0, 360)
+        this.s = random(0, 100)
+        this.l = random(0, 100)
+      }
+      get random(){
+        this.h = random(0, 360)
+        this.s = random(0, 100)
+        this.l = random(0, 100)
+        return this
+      }
+
+      pretty(light){
+        light = light || this.l
+        // return `hsl(${this.h}, ${this.s}%, ${light}%)`
+        return `oklch(${light}, ${this.s}%, ${this.h}%)`
+      }
+      lighter(percent){
+        percent = percent || 10
+        let light = this.l
+        light += percent
+        return this.pretty(light)
+      }
+      values(){
+        return {h: this.h, s: this.s, l: this.l}
+      }
+    }
+
+
+    class Circle
+    {
+      constructor(rx){
+        this.cx = random(0, 100, "%")
+        this.cy = random(0, 100, "%")
+
+        let deviation = 40
+        let size_x = rx + 'px'
+        let size_y = random((rx - deviation), (rx + deviation), 'px')
+
+        this.rx = size_x
+        this.ry = size_y
+
+        color = new Color()
+
+        this.fill = color.pretty()
+        this.stroke = get_random_color()
+        this.stroke_width = random(5, 100, 'px')
+      }
+      to_svg(){
+        let circle = document.createElementNS(
+            'http://www.w3.org/2000/svg', 'ellipse');
+        circle.setAttribute('cx', this.cx)
+        circle.setAttribute('cy', this.cy)
+        circle.setAttribute('rx', this.rx)
+        circle.setAttribute('ry', this.ry)
+        circle.setAttribute('fill', this.fill);
+        circle.setAttribute('stroke', this.stroke);
+        circle.setAttribute('stroke-width', this.stroke_width);
+        return circle
+      }
+    }
+
+
+    let bg = document.getElementById('background')
+    bg.attributes.fill.value = get_random_color()
+
+
+    function layer(layer, count, min_size, max_size){
+      for(let i = 0; i < count; i++){
+        let rx = random(min_size, max_size)
+        c = new Circle(rx)
+        layer.appendChild(c.to_svg())
+      }
+    }
+
+    /*
+    image = new Image()
+    layer = new Layer()
+    layer.add_circles(100)
+    layer.blur(10)
+    image.add_layer(layer)
+
+    image = new Image()
+      // creates a background element
+      // does the work of inserting the layer elements
+    layer = new Layer()
+      // inserts a group element into the image
+    layer.add_filter('blur', 10)
+      // inserts a filter element into the defs and references
+      // it in the group
+    layer_b = layer.copy()
+    image.add_layer(layer)
+
+
+    */
+    let layerA = document.getElementById('layer-a');
+    layer(layerA, 50, 20, 100)
+
+    let layerB = document.getElementById('layer-b');
+    layer(layerB, 5, 20, 40)
+
+
+    document.querySelector('ellipse').addEventListener('click', () => {
+      // console.log('ellipse clicked')
+      get_random_color()
+    })
+    ]]></script>
+</svg>
